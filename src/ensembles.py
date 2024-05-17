@@ -37,7 +37,7 @@ class Ensemble:
         for column in prediction.T:
             counter = Counter(column)
             result = np.append(result, counter.most_common(1)[0][0])
-        return np.array_str(result, precision=1)
+        return result
             
             
 
@@ -47,7 +47,9 @@ class SVMEnsemble(Ensemble):
         self.classifier = svm.SVC()
 
 class DecisionTreeEnsemble(Ensemble):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.classifier = tree.DecisionTreeClassifier()
 
 class GaussianNaiveBayesEnseble(Ensemble):
     pass
