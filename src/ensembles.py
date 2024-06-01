@@ -7,12 +7,6 @@ from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator
 
 
-class SingleClassifier:
-    def __init__(self, classifier):
-        self.classifier = classifier
-        self.column_indices = None
-
-
 class Ensemble(BaseEstimator):
     def __init__(
         self,
