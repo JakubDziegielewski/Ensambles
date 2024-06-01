@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Literal, Callable
 from numpy.random import RandomState
 from numpy.typing import ArrayLike
-
+from sklearn.base import BaseEstimator
 
 
 class SingleClassifier:
@@ -13,7 +13,7 @@ class SingleClassifier:
         self.column_indices = None
 
 
-class Ensemble:
+class Ensemble(BaseEstimator):
     def __init__(
         self,
         classifier_constructor: Callable,
@@ -29,9 +29,9 @@ class Ensemble:
         self.classifier = None
         self.classifiers_number = classifiers_number
         self.max_attributes = max_attributes
-        self.random_state = RandomState(random_state)
+        self.random_state = random_state
         self.min_categories = min_categories
-
+        
     def fit(self, data_x, data_y):
         all_attributes = data_x.shape[1]
         max_attributes = None
@@ -53,9 +53,10 @@ class Ensemble:
             max_attributes = int(np.log(all_attributes))
 
         self.ensambles = []
+        random_state = RandomState(self.random_state)
         for _ in range(self.classifiers_number):
-            row_indices = self.random_state.choice(data_x.shape[0], size=data_x.shape[0])    
-            column_indices = self.random_state.choice(
+            row_indices = random_state.choice(data_x.shape[0], size=data_x.shape[0])    
+            column_indices = random_state.choice(
                 data_x.shape[1], max_attributes, replace=False
             )
             single_classifier = self.classifier_constructor()
@@ -90,4 +91,6 @@ class Ensemble:
     def score(self, data_x, data_y):
         predictions = self.predict(data_x)
         return sum(predictions == data_y) / len(data_y)
-
+    
+    def get_params(self, deep: bool = True) -> dict:
+        return super().get_params(deep)
