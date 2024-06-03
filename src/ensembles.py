@@ -68,11 +68,11 @@ class Ensemble(BaseEstimator):
     def predict(self, data_x):
         prediction = np.zeros(shape=(0, data_x.shape[0]), dtype="int32")
         result = np.array([], dtype="int32")
-        for single_classfier, column_indices in self.ensambles:
+        for single_classifier, column_indices in self.ensambles:
             prediction = np.vstack(
                 [
                     prediction,
-                    single_classfier.predict(
+                    single_classifier.predict(
                         data_x[:, column_indices]
                     )
                 ]
