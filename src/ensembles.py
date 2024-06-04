@@ -46,7 +46,8 @@ class Ensemble(BaseEstimator):
         elif self.max_attributes == "log":
             max_attributes = int(np.log(all_attributes))
 
-        self.ensambles = [] * self.classifiers_number
+        self.ensambles = np.zeros(self.classifiers_number, dtype=self.classifier_constructor)
+        self.columns = np.zeros(shape = (self.classifiers_number, max_attributes), dtype=np.uint16)
         self.classes_ = np.unique(data_y)
         random_state = RandomState(self.random_state)
         for i in range(self.classifiers_number):
@@ -64,11 +65,14 @@ class Ensemble(BaseEstimator):
                 data_x[row_indices][:, column_indices],
                 data_y[row_indices]
             )
-            self.ensambles.append((single_classifier, column_indices))
+            self.ensambles[i] = single_classifier
+            self.columns[i] = column_indices
+            
     
     def _run_prediction(self, data_x: np.array) -> np.array:
         prediction = np.zeros(shape=(len(self.ensambles), data_x.shape[0]), dtype="int32")
-        for i, (single_classfier, column_indices) in enumerate(self.ensambles):
+        for i, single_classfier in enumerate(self.ensambles):
+            column_indices = self.columns[i]
             prediction[i] = single_classfier.predict(data_x[:, column_indices])
         return prediction
 
