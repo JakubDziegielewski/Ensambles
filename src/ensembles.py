@@ -46,9 +46,11 @@ class Ensemble(BaseEstimator):
         elif self.max_attributes == "log":
             max_attributes = int(np.log(all_attributes))
 
-        self.ensambles = []
+        self.ensambles = np.zeros(self.classifiers_number, dtype=self.classifier_constructor)
+        self.columns = np.zeros(shape = (self.classifiers_number, max_attributes), dtype=np.uint16)
+        self.classes_ = np.unique(data_y)
         random_state = RandomState(self.random_state)
-        for _ in range(self.classifiers_number):
+        for i in range(self.classifiers_number):
             row_indices = random_state.choice(data_x.shape[0], size=data_x.shape[0])    
             column_indices = random_state.choice(
                 data_x.shape[1], max_attributes, replace=False
@@ -63,28 +65,38 @@ class Ensemble(BaseEstimator):
                 data_x[row_indices][:, column_indices],
                 data_y[row_indices]
             )
-            self.ensambles.append((single_classifier, column_indices))
+            self.ensambles[i] = single_classifier
+            self.columns[i] = column_indices
+            
+    
+    def _run_prediction(self, data_x: np.array) -> np.array:
+        prediction = np.zeros(shape=(len(self.ensambles), data_x.shape[0]), dtype="int32")
+        for i, single_classfier in enumerate(self.ensambles):
+            column_indices = self.columns[i]
+            prediction[i] = single_classfier.predict(data_x[:, column_indices])
+        return prediction
 
-    def predict(self, data_x):
-        prediction = np.zeros(shape=(0, data_x.shape[0]), dtype="int32")
-        result = np.array([], dtype="int32")
-        for single_classifier, column_indices in self.ensambles:
-            prediction = np.vstack(
-                [
-                    prediction,
-                    single_classifier.predict(
-                        data_x[:, column_indices]
-                    )
-                ]
-            )
-        for column in prediction.T:
+    def predict(self, data_x: np.array):
+        prediction = self._run_prediction(data_x)
+        result = np.zeros(prediction.shape[1], dtype="int32")
+        for i, column in enumerate(prediction.T):
             counter = Counter(column)
-            result = np.append(result, counter.most_common(1)[0][0])
+            result[i] = counter.most_common(1)[0][0]
         return result
     
     def score(self, data_x, data_y):
         predictions = self.predict(data_x)
         return sum(predictions == data_y) / len(data_y)
+    
+    def predict_proba(self, data_x):
+        prediction = self._run_prediction(data_x)
+        result = np.zeros(shape = (prediction.shape[1], len(self.classes_)), dtype=float)
+        for i, column in enumerate(prediction.T):
+            counter = Counter(column)
+            probability = np.array([counter[cls] for cls in self.classes_]) / counter.total()
+            result[i] = probability
+        return result
+        
     
     def get_params(self, deep: bool = True) -> dict:
         return super().get_params(deep)
