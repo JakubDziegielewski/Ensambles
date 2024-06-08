@@ -43,8 +43,8 @@ class Ensemble(BaseEstimator):
             max_attributes = int(np.round(all_attributes * self.max_attributes))
         elif self.max_attributes == "sqrt":
             max_attributes = int(np.sqrt(all_attributes))
-        elif self.max_attributes == "log":
-            max_attributes = int(np.log(all_attributes))
+        elif self.max_attributes == "log2":
+            max_attributes = int(np.log2(all_attributes))
 
         self.ensambles = np.zeros(self.classifiers_number, dtype=self.classifier_constructor)
         self.columns = np.zeros(shape = (self.classifiers_number, max_attributes), dtype=np.uint16)
